@@ -2,10 +2,10 @@ import re
 
 
 class HttpHeader:
-    def __init__(self, name, value):
+    def __init__(self, name, value, variables_in_value):
         self.name = name
         self.value = value
-        self.variables_in_value = "{{" in value
+        self.variables_in_value = variables_in_value
 
 
 class HttpTarget:
@@ -17,6 +17,7 @@ class HttpTarget:
         self.tags = []
         self.method = ""
         self.url = ""
+        self.variables_in_url = False
         self.schema = None
         self.headers = []
         self.body = None
@@ -34,9 +35,10 @@ class HttpTarget:
 
     def clean(self):
         if self.url != "":
-            self.variables_in_body = "{{" in self.body
+            self.variables_in_url = "{{" in self.url
             self.url = self.replace_variables(self.url)
         if self.body is not None:
+            self.variables_in_body = "{{" in self.body
             self.body = self.replace_variables(self.body)
         if self.name is None:
             self.name = "http" + self.index
@@ -53,7 +55,9 @@ class HttpTarget:
         self.tags.append(tag)
 
     def add_header(self, name, value):
-        self.headers.append(HttpHeader(name, value))
+        variables_in_header = '{{' in value
+        new_value = self.replace_variables(value)
+        self.headers.append(HttpHeader(name, new_value, variables_in_header))
 
     def add_script_line(self, script_line):
         pass
@@ -123,8 +127,9 @@ def parse_httpfile(httpfile_text: str):
                 http_target.add_tag(tag)
             elif http_target.comment == "":
                 http_target.comment = line[2].strip()
-        elif (line.startswith("GET ") or line.startswith("POST ") or line.startswith(
-                "GRAPHQL ")) and http_target.method == "":  # http method and URL
+        elif (line.startswith("GET ") or line.startswith("POST ")
+              or line.startswith("DELETE") or line.startswith("PUT ")
+              or line.startswith("GRAPHQL ")) and http_target.method == "":  # http method and URL
             parts = line.split(' ', 3)  # format as `POST URL HTTP/1.1`
             http_target.method = parts[0]
             http_target.url = parts[1].strip()
