@@ -1,3 +1,0 @@
-### print my ip
-//@name myIp
-GET https://httpbin.org/ip
