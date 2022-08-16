@@ -1,4 +1,22 @@
 import re
+import uuid
+import time
+import random
+
+
+class SafeDict(dict):
+    def __missing__(self, key):
+        return ''
+
+    def __getitem__(self, key):
+        if key == "uuid":
+            return str(uuid.uuid4())
+        elif key == "timestamp":
+            return str(time.time_ns() / 1000)
+        elif key == "randomInt":
+            return str(random.randint(0, 1000))
+        else:
+            return super().__getitem__(key)
 
 
 class HttpHeader:
@@ -107,14 +125,26 @@ class HttpTarget:
             doc['query'] = self.body
         return doc
 
-    def to_api_declare(self):
-        pass
+    def get_url(self, **params):
+        if self.variables_in_url:
+            return self.url.format_map(SafeDict(params))
+        else:
+            return self.url
 
-    def to_mock_code(self):
-        pass
+    def get_http_headers(self, **params):
+        http_headers = []
+        for header in self.headers:
+            if header.variables_in_value:
+                http_headers.append((header.name, header.value.format_map(params)))
+            else:
+                http_headers.append((header.name, header.value))
+        return http_headers
 
-    def to_function(self):
-        pass
+    def get_http_body(self, **params):
+        if self.variables_in_body:
+            return self.body.format_map(params)
+        else:
+            return self.body
 
 
 def parse_httpfile(httpfile_text: str):
