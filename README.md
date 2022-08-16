@@ -11,18 +11,41 @@ Python httpfile import loader
 GET https://httpbin.org/ip
 ```
 
-* Introduce `httpfile` package
+* Add `httpfile` package in `requirements.txt` or other configuration file
 * Write your code:
 
 ```python
 import httpfile.loader
 # noinspection PyUnresolvedReferences
-import demo
+import httpbin
 
 if __name__ == '__main__':
-    r = demo.myIp()
+    r = httpbin.myIp()
     print(r.json())
 ```
+
+# Async support
+
+If you want to use async feature, please add `async_` prefix to request name, code as following:
+
+```python
+import httpfile.loader
+# noinspection PyUnresolvedReferences
+import httpbin
+import asyncio
+
+
+async def my_ip():
+    r = await httpbin.async_myIp()
+    print(r.json())
+
+
+if __name__ == '__main__':
+    asyncio.run(my_ip())
+
+```
+
+**Attention**: don't forget to add `asyncio` package!
 
 # Python HTTP Clients
 
@@ -31,3 +54,9 @@ if __name__ == '__main__':
 * aiohttp: https://docs.aiohttp.org/
 * GRequests: https://github.com/spyoungtech/grequests
 * HTTPX: https://www.python-httpx.org/
+
+httpfile-py uses HTTPX as http client.
+
+# References
+
+* https://servicex.sh/
