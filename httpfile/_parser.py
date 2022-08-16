@@ -4,6 +4,7 @@ import time
 import random
 import json
 from string import Template
+from typing import Optional
 
 
 class SafeDict(dict):
@@ -22,7 +23,7 @@ class SafeDict(dict):
 
 
 class HttpHeader:
-    def __init__(self, name, value):
+    def __init__(self, name: str, value: str):
         self.name = name
         self.value = value
         if "${" in self.value:
@@ -37,25 +38,25 @@ class HttpHeader:
 class HttpTarget:
 
     def __init__(self, index):
-        self.index = index
-        self.name = None
-        self.comment = None
-        self.tags = []
-        self.method = ""
-        self.url = ""
-        self.url_template = None
-        self.schema = None
-        self.headers = []
-        self.body = None
-        self.body_template = None
-        self.body_lines = None
-        self.script = None
-        self.variables = []
-        self.mock_result = None
-        self.graphql_query_text = None
-        self.graphql_query_template = None
-        self.graphql_variables_text = None
-        self.graphql_variables_template = None
+        self.index: int = index
+        self.name: Optional[str] = None
+        self.comment: Optional[str] = None
+        self.tags: list[str] = []
+        self.method: str = ""
+        self.url: str = ""
+        self.url_template: Optional[Template] = None
+        self.schema: Optional[str] = None
+        self.headers: list[HttpHeader] = []
+        self.body: Optional[str] = None
+        self.body_template: Optional[Template] = None
+        self.body_lines: Optional[list[str]] = None
+        self.script: Optional[str] = None
+        self.variables: list[str] = []
+        self.mock_result: Optional[str] = None
+        self.graphql_query_text: Optional[str] = None
+        self.graphql_query_template: Optional[Template] = None
+        self.graphql_variables_text: Optional[str] = None
+        self.graphql_variables_template: Optional[Template] = None
 
     def is_empty(self):
         return self.method == "" and self.url == ""
@@ -73,7 +74,7 @@ class HttpTarget:
             if "${" in self.body:
                 self.body_template = Template(self.body)
         if self.name is None:
-            self.name = "http" + self.index
+            self.name = "http" + str(self.index)
         else:
             self.name = self.name.replace("-", "_")
         if self.method == "GRAPHQL":
@@ -177,13 +178,13 @@ class HttpTarget:
         return doc
 
 
-def parse_httpfile(httpfile_text: str):
-    targets = []
+def parse_httpfile(httpfile_text: str) -> list[HttpTarget]:
+    targets: list[HttpTarget] = []
     lines = httpfile_text.splitlines()
     index = 1
     http_target = HttpTarget(index)
-    for l in lines:
-        line = l.rstrip()
+    for raw_line in lines:
+        line = raw_line.rstrip()
         if (line == "" or line.startswith("#!/usr/bin/env")) and http_target.is_empty():
             continue
         if line.startswith("###"):  # request seperator
@@ -235,9 +236,9 @@ def parse_httpfile(httpfile_text: str):
                     http_target.script = line
                 else:
                     if http_target.script is not None:
-                        http_target.add_script_line(l)
+                        http_target.add_script_line(raw_line)
                     else:
-                        http_target.add_body_line(l)
+                        http_target.add_body_line(raw_line)
 
     if not http_target.is_empty():
         http_target.clean()
