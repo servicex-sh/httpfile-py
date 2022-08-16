@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="httpfile-py",
-    version="0.1.0",
+    version="0.1.2",
     author="linux_china",
     author_email="libing.chen@gmail.com",
     description="Python module loader for http file",
