@@ -7,6 +7,9 @@ class HttpHeader:
         self.value = value
         self.variables_in_value = variables_in_value
 
+    def __repr__(self):
+        return "(" + self.name + ":" + self.value + ")"
+
 
 class HttpTarget:
 
