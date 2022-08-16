@@ -1,7 +1,15 @@
 from pathlib import Path
 from pprint import pprint
 
-from httpfile import parse_httpfile
+from httpfile import parse_httpfile, SafeDict
+from string import Template
+
+
+def test_safe_dict():
+    params = {'nick': 'linux_china'}
+    t = Template("Hello ${nick}, your age ${age}, uuid: ${uuid}")
+    text = t.substitute(SafeDict(params))
+    print(text)
 
 
 def test_paser():
