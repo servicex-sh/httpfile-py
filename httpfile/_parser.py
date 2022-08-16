@@ -75,7 +75,7 @@ class HttpTarget:
         if self.name is None:
             self.name = "http" + self.index
         else:
-            self.name = self.name.replace("-", "")
+            self.name = self.name.replace("-", "_")
         if self.method == "GRAPHQL":
             self.extract_graphql_document()
         mocked_lines = []
