@@ -8,15 +8,29 @@ can `import your_http_file` which will automatically compile and instantiate
 
 import sys
 import os.path
+import uuid
+import time
+import random
 
 from importlib.abc import Loader, MetaPathFinder
 from importlib.util import spec_from_file_location
+
 import httpx
 
 
 class SafeDict(dict):
     def __missing__(self, key):
         return ''
+
+    def __getitem__(self, key):
+        if key == "uuid":
+            return str(uuid.uuid4())
+        elif key == "timestamp":
+            return str(time.time_ns() / 1000)
+        elif key == "randomInt":
+            return str(random.randint(0, 1000))
+        else:
+            return super().__getitem__(key)
 
 
 # Mostly copied from
