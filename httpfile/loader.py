@@ -14,7 +14,7 @@ from importlib.util import spec_from_file_location
 
 import httpx
 
-from httpfile import parse_httpfile
+from httpfile import parse_httpfile, HttpTarget
 
 
 # Mostly copied from
@@ -40,7 +40,7 @@ class _HttpfileMetaFinder(MetaPathFinder):
         return None
 
 
-def create_request(http_target):
+def create_request(http_target: HttpTarget):
     def http_request(**params):
         method = http_target.method
         http_url = http_target.get_url(**params)
@@ -62,7 +62,7 @@ def create_request(http_target):
     return http_request
 
 
-def create_async_request(http_target):
+def create_async_request(http_target: HttpTarget):
     async def async_http_request(**params):
         method = http_target.method
         http_url = http_target.get_url(**params)
