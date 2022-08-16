@@ -87,7 +87,22 @@ class HttpTarget:
         return new_text
 
     def extract_graphql_document(self):
-        pass
+        doc = {}
+        variables_offset = -1
+        variables_offset_end = -1
+        for idx, l in enumerate(self.body_lines):
+            line = l.strip()
+            if line == "{":
+                variables_offset = idx
+            elif line == "}":
+                variables_offset_end = idx
+        if 0 < variables_offset < variables_offset_end:
+            query = "\n".join(self.body_lines[0:variables_offset])
+            doc['query'] = query
+            doc['variables'] = "\n".join(self.body_lines[variables_offset:])
+        else:
+            doc['query'] = self.body
+        return doc
 
     def to_api_declare(self):
         pass
