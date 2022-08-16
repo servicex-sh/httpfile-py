@@ -42,8 +42,6 @@ setuptools.setup(
         "Operating System :: OS Independent",
         "Topic :: Internet :: WWW/HTTP",
         "Framework :: AsyncIO",
-        "Framework :: Trio",
-        "Framework :: httpx",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
