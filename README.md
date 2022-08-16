@@ -7,11 +7,11 @@ Python httpfile import loader
 
 ```
 ### print my ip
-//@name myIp
+//@name my-ip
 GET https://httpbin.org/ip
 ```
 
-* Add `httpfile` package in `requirements.txt` or other configuration file
+* Add `httpfile-py` package in `requirements.txt` or other configuration file
 * Write your code:
 
 ```python
@@ -20,7 +20,7 @@ import httpfile.loader
 import httpbin
 
 if __name__ == '__main__':
-    r = httpbin.myIp()
+    r = httpbin.my_ip()
     print(r.json())
 ```
 
@@ -36,7 +36,7 @@ import asyncio
 
 
 async def my_ip():
-    r = await httpbin.async_myIp()
+    r = await httpbin.async_my_ip()
     print(r.json())
 
 
