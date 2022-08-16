@@ -36,5 +36,5 @@ query {
 
 {
   "id": 1,
-  "name": "hi` morning"
+  "name": "{{nick}}"
 }
