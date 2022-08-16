@@ -1,12 +1,12 @@
 #!/usr/bin/env httpx
 
 ### get my ip
-//@name myIp
+//@name my-ip
 GET https://httpbin.org/ip
 User-Agent: curl/7.47.0
 
 ### post test
-//@name postTest
+//@name post-test
 POST https://{{host}}/post
 User-Agent: curl/7.47.0
 Content-Type: application/json
@@ -19,7 +19,7 @@ Content-Type: application/json
 }
 
 ### GraphQL simple
-//@name graphqlSimple
+//@name graphql-simple
 GRAPHQL https://httpbin.org/post
 
 query {
@@ -27,7 +27,7 @@ query {
 }
 
 ### GraphQL demo with variables
-//@name graphqlDemo
+//@name graphql-demo
 GRAPHQL https://httpbin.org/post
 
 query {

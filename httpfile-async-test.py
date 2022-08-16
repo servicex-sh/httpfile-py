@@ -5,7 +5,7 @@ import asyncio
 
 
 async def my_ip():
-    r = await index.async_myIp()
+    r = await index.async_my_ip()
     print(r.json())
 
 
