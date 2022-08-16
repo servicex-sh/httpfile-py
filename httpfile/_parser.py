@@ -89,8 +89,9 @@ class HttpTarget:
         self.tags.append(tag)
 
     def add_header(self, name, value):
-        new_value = self.replace_variables(value)
-        self.headers.append(HttpHeader(name, new_value))
+        if not (self.method == "GRAPHQL" and name.lower() == "content-type"):
+            new_value = self.replace_variables(value)
+            self.headers.append(HttpHeader(name, new_value))
 
     def add_script_line(self, script_line):
         pass
@@ -138,6 +139,8 @@ class HttpTarget:
             self.graphql_query_text = self.replace_variables(self.body)
         if "${" in self.graphql_query_text:
             self.graphql_query_template = Template(self.graphql_query_text)
+        # add application/json
+        self.add_header("Content-Type", "application/json")
 
     def get_url(self, **params):
         if self.url_template is not None:
