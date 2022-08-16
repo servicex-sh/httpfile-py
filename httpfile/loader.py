@@ -8,29 +8,13 @@ can `import your_http_file` which will automatically compile and instantiate
 
 import sys
 import os.path
-import uuid
-import time
-import random
 
 from importlib.abc import Loader, MetaPathFinder
 from importlib.util import spec_from_file_location
 
 import httpx
 
-
-class SafeDict(dict):
-    def __missing__(self, key):
-        return ''
-
-    def __getitem__(self, key):
-        if key == "uuid":
-            return str(uuid.uuid4())
-        elif key == "timestamp":
-            return str(time.time_ns() / 1000)
-        elif key == "randomInt":
-            return str(random.randint(0, 1000))
-        else:
-            return super().__getitem__(key)
+from httpfile import parse_httpfile
 
 
 # Mostly copied from
@@ -56,19 +40,19 @@ class _HttpfileMetaFinder(MetaPathFinder):
         return None
 
 
-def create_request(method, url, headers, body):
+def create_request(http_target):
     def http_request(**params):
-        print("=====params======")
-        print(params)
-        print("=====headers======")
-        print(headers)
-        print("=====body======")
-        print(body)
-        print("==============")
+        method = http_target.method
+        http_url = http_target.get_url(**params)
+        http_headers = http_target.get_http_headers(**params)
         if method == "GET":
-            return httpx.get(url, headers=headers)
+            return httpx.get(http_url, headers=http_headers)
+        elif method == "DELETE":
+            return httpx.delete(http_url, headers=http_headers)
         elif method == "POST":
-            return httpx.post("")
+            return httpx.post(http_url, headers=http_headers, content=http_target.get_http_body(params))
+        elif method == "PUT":
+            return httpx.put(http_url, headers=http_headers, content=http_target.get_http_body(params))
         else:
             pass
 
@@ -83,9 +67,11 @@ class _HttpfileLoader(Loader):
         return None  # use default module creation semantics
 
     def exec_module(self, module):  # type: ignore
-        module.__dict__["myIp"] = create_request('GET', 'https://httpbin.org/ip',
-                                                 {"Content-Type": "application/json"},
-                                                 '{"id":1, "name":"linux_china"}')
+        with open(self.filename) as f:
+            httpfile_text = f.read()
+            targets = parse_httpfile(httpfile_text)
+        for target in targets:
+            module.__dict__[target.name] = create_request(target)
 
 
 sys.meta_path.insert(0, _HttpfileMetaFinder())
