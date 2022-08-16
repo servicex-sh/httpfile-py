@@ -2,6 +2,8 @@ import re
 import uuid
 import time
 import random
+import json
+from string import Template
 
 
 class SafeDict(dict):
@@ -20,10 +22,13 @@ class SafeDict(dict):
 
 
 class HttpHeader:
-    def __init__(self, name, value, variables_in_value):
+    def __init__(self, name, value):
         self.name = name
         self.value = value
-        self.variables_in_value = variables_in_value
+        if "${" in self.value:
+            self.value_template = Template(self.value)
+        else:
+            self.value_template = None
 
     def __repr__(self):
         return "(" + self.name + ":" + self.value + ")"
@@ -38,15 +43,19 @@ class HttpTarget:
         self.tags = []
         self.method = ""
         self.url = ""
-        self.variables_in_url = False
+        self.url_template = None
         self.schema = None
         self.headers = []
         self.body = None
-        self.variables_in_body = False
+        self.body_template = None
         self.body_lines = None
         self.script = None
         self.variables = []
         self.mock_result = None
+        self.graphql_query_text = None
+        self.graphql_query_template = None
+        self.graphql_variables_text = None
+        self.graphql_variables_template = None
 
     def is_empty(self):
         return self.method == "" and self.url == ""
@@ -56,15 +65,19 @@ class HttpTarget:
 
     def clean(self):
         if self.url != "":
-            self.variables_in_url = "{{" in self.url
             self.url = self.replace_variables(self.url)
+            if "${" in self.url:
+                self.url_template = Template(self.url)
         if self.body is not None:
-            self.variables_in_body = "{{" in self.body
             self.body = self.replace_variables(self.body)
+            if "${" in self.body:
+                self.body_template = Template(self.body)
         if self.name is None:
             self.name = "http" + self.index
         else:
             self.name = self.name.replace("-", "")
+        if self.method == "GRAPHQL":
+            self.extract_graphql_document()
         mocked_lines = []
         for tag in self.tags:
             if tag.startswith("mock "):
@@ -76,9 +89,8 @@ class HttpTarget:
         self.tags.append(tag)
 
     def add_header(self, name, value):
-        variables_in_header = '{{' in value
         new_value = self.replace_variables(value)
-        self.headers.append(HttpHeader(name, new_value, variables_in_header))
+        self.headers.append(HttpHeader(name, new_value))
 
     def add_script_line(self, script_line):
         pass
@@ -103,12 +115,11 @@ class HttpTarget:
                 name = name[1:]
             if not (name in self.variables):
                 self.variables.append(name)
-            value = '{' + name + "}"
+            value = '${' + name + "}"
             new_text = new_text[0:start] + value + new_text[end + 2:]
         return new_text
 
     def extract_graphql_document(self):
-        doc = {}
         variables_offset = -1
         variables_offset_end = -1
         for idx, l in enumerate(self.body_lines):
@@ -119,32 +130,48 @@ class HttpTarget:
                 variables_offset_end = idx
         if 0 < variables_offset < variables_offset_end:
             query = "\n".join(self.body_lines[0:variables_offset])
-            doc['query'] = query
-            doc['variables'] = "\n".join(self.body_lines[variables_offset:])
+            self.graphql_query_text = self.replace_variables(query)
+            self.graphql_variables_text = self.replace_variables("\n".join(self.body_lines[variables_offset:]))
+            if "${" in self.graphql_variables_text:
+                self.graphql_variables_template = Template(self.graphql_variables_text)
         else:
-            doc['query'] = self.body
-        return doc
+            self.graphql_query_text = self.replace_variables(self.body)
+        if "${" in self.graphql_query_text:
+            self.graphql_query_template = Template(self.graphql_query_text)
 
     def get_url(self, **params):
-        if self.variables_in_url:
-            return self.url.format_map(SafeDict(params))
+        if self.url_template is not None:
+            return self.url_template.substitute(SafeDict(params))
         else:
             return self.url
 
     def get_http_headers(self, **params):
         http_headers = []
         for header in self.headers:
-            if header.variables_in_value:
-                http_headers.append((header.name, header.value.format_map(params)))
+            if header.value_template is not None:
+                http_headers.append((header.name, header.value_template.substitute(SafeDict(params))))
             else:
                 http_headers.append((header.name, header.value))
         return http_headers
 
     def get_http_body(self, **params):
-        if self.variables_in_body:
-            return self.body.format_map(params)
+        if self.body_template is not None:
+            return self.body_template.substitute(SafeDict(params))
         else:
             return self.body
+
+    def get_graphql_document(self, **params):
+        doc = {}
+        if self.graphql_query_template is not None:
+            doc['query'] = self.graphql_query_template.substitute(SafeDict(params))
+        else:
+            doc['query'] = self.graphql_query_text
+        if self.graphql_variables_text is not None:
+            if self.graphql_variables_template is not None:
+                doc['variables'] = json.loads(self.graphql_variables_template.substitute(SafeDict(params)))
+            else:
+                doc['variables'] = json.loads(self.graphql_variables_text)
+        return doc
 
 
 def parse_httpfile(httpfile_text: str):
