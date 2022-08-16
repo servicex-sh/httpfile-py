@@ -1,24 +1,13 @@
 # type: ignore
 
 import setuptools
-import os
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-with open("VERSION", "r") as fh:
-    version = fh.read().strip()
-
-# Give unique version numbers to all commits so our publication-on-each commit
-# works on main
-if 'PROD' not in os.environ:
-    stream = os.popen('git rev-list HEAD --count')
-    output = stream.read()
-    version += '.dev' + output.strip()
-
 setuptools.setup(
-    name="httpfile",
-    version=version,
+    name="httpfile-py",
+    version="0.1.0",
     author="linux_china",
     author_email="libing.chen@gmail.com",
     description="Python module loader for http file",
