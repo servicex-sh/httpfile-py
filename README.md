@@ -18,9 +18,10 @@ GET https://httpbin.org/ip
 import httpfile.loader
 # noinspection PyUnresolvedReferences
 import httpbin
+from httpx import Response
 
 if __name__ == '__main__':
-    r = httpbin.my_ip()
+    r: Response = httpbin.my_ip()
     print(r.json())
 ```
 
@@ -33,10 +34,11 @@ import httpfile.loader
 # noinspection PyUnresolvedReferences
 import httpbin
 import asyncio
+from httpx import Response
 
 
 async def my_ip():
-    r = await httpbin.async_my_ip()
+    r: Response = await httpbin.async_my_ip()
     print(r.json())
 
 
