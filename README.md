@@ -1,6 +1,8 @@
 Python httpfile import loader
 ===============================
 
+![import httpfile in Python](./py_import_httpfile.png)
+
 # How to use?
 
 * Create http file, such as `httpbin.http`
