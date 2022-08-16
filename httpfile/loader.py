@@ -50,9 +50,12 @@ def create_request(http_target):
         elif method == "DELETE":
             return httpx.delete(http_url, headers=http_headers)
         elif method == "POST":
-            return httpx.post(http_url, headers=http_headers, content=http_target.get_http_body(params))
+            return httpx.post(http_url, headers=http_headers, content=http_target.get_http_body(**params))
         elif method == "PUT":
-            return httpx.put(http_url, headers=http_headers, content=http_target.get_http_body(params))
+            return httpx.put(http_url, headers=http_headers, content=http_target.get_http_body(**params))
+        elif method == "GRAPHQL":
+            graphql_doc = http_target.get_graphql_document(**params)
+            return httpx.post(http_url, headers=http_headers, json=graphql_doc)
         else:
             pass
 
