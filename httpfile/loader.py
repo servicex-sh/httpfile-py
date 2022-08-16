@@ -57,9 +57,32 @@ def create_request(http_target):
             graphql_doc = http_target.get_graphql_document(**params)
             return httpx.post(http_url, headers=http_headers, json=graphql_doc)
         else:
-            pass
+            raise Exception("http request not found: " + http_target.name)
 
     return http_request
+
+
+def create_async_request(http_target):
+    async def async_http_request(**params):
+        method = http_target.method
+        http_url = http_target.get_url(**params)
+        http_headers = http_target.get_http_headers(**params)
+        async with httpx.AsyncClient() as client:
+            if method == "GET":
+                return await client.get(http_url, headers=http_headers)
+            elif method == "DELETE":
+                return await client.delete(http_url, headers=http_headers)
+            elif method == "POST":
+                return await client.post(http_url, headers=http_headers, content=http_target.get_http_body(**params))
+            elif method == "PUT":
+                return await client.put(http_url, headers=http_headers, content=http_target.get_http_body(**params))
+            elif method == "GRAPHQL":
+                graphql_doc = http_target.get_graphql_document(**params)
+                return await client.post(http_url, headers=http_headers, json=graphql_doc)
+            else:
+                raise Exception("http request not found: " + http_target.name)
+
+    return async_http_request
 
 
 class _HttpfileLoader(Loader):
@@ -75,6 +98,8 @@ class _HttpfileLoader(Loader):
             targets = parse_httpfile(httpfile_text)
         for target in targets:
             module.__dict__[target.name] = create_request(target)
+        for target in targets:
+            module.__dict__["async_" + target.name] = create_async_request(target)
 
 
 sys.meta_path.insert(0, _HttpfileMetaFinder())
