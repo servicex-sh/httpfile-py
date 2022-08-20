@@ -220,7 +220,11 @@ def parse_httpfile(httpfile_text: str) -> list[HttpTarget]:
             http_target.url = http_target.url + line.strip()
         elif (":" in line) and (http_target.body is None) and (http_target.script is None):  # http header
             offset = line.index(':')
-            http_target.add_header(line[0:offset].strip(), line[offset + 1:].strip())
+            name = line[0:offset].strip()
+            if ' ' in name:
+                http_target.add_body_line(raw_line)
+            else:
+                http_target.add_header(name, line[offset + 1:].strip())
         elif line.startswith("<> "):  # response-ref
             continue
         else:  # http body
